@@ -3,7 +3,7 @@
 #define POWER A4 // Soil Sensor power
 #define GLED D7 // Wet Indicator
 #define SENSE A1 // Soil Sensor input
-#define INTERVAL 60*5
+#define INTERVAL 60*30
 
 PowerShield batteryMonitor;
 int sensorValue = 0;
