@@ -1,20 +1,18 @@
 #include "PowerShield.h"
 
-#define SOILPOWER A4 // Soil Sensor power
-#define SOILSENSE A1 // Soil Sensor input
+#define INTERVAL 60*30  // Run every 30 minutes
+#define DRY_PERCENTAGE_TRESHOLD 50  // Dry is less than 50% of the sensorvalue
+#define MILLISECONDSONLINE  1000*60*5
 
-#define PUMP D4 // Pump power control
-
-#define INTERVAL 60*30
-#define DRY_PERCENTAGE_TRESHOLD 50
+#define SOILPOWER A4    // Soil Sensor power
+#define SOILSENSE A1    // Soil Sensor input
+#define PUMP D4         // Pump power control
 
 #define STATE_START 1
 #define STATE_MEASURING 2
 #define STATE_PUMPING 3
 #define STATE_SENDING 4
 #define STATE_WAITING 5
-
-#define MILLISECONDSONLINE  1000*60*5
 
 PowerShield batteryMonitor;
 int sensorValue = 0;
