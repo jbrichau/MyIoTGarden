@@ -11,19 +11,21 @@
 #define STATE_START 1
 #define STATE_MEASURING 2
 #define STATE_PUMPING 3
-#define STATE_SENDING 4
-#define STATE_WAITING 5
+#define STATE_CHECK_RESULT 4
+#define STATE_SENDING 5
+#define STATE_WAITING 6
 
 PowerShield batteryMonitor;
-int sensorValue = 0;
-int soilHumidity = 0;
 const int dryValue = 3120;
 const int wetValue = 1530;
+int sensorValue = 0;
+int soilHumidity = 0;
 double soc = 0;
 int wifi = 0;
-int measureCounter;
-int pumpCounter;
-int state;
+int measureCounter = 0;
+int pumpCounter = 0;
+int outofwater = 0;
+int state = STATE_START;
 unsigned long startTime;
 
 // Set external antenna (remembered after power off)
@@ -36,12 +38,9 @@ void setup() {
   pinMode(SOILPOWER, OUTPUT);
   pinMode(PUMP,OUTPUT);
   digitalWrite(PUMP,LOW);
+  digitalWrite(SOILPOWER, HIGH);
   Particle.variable("battery", soc);
   Particle.variable("soilhumidity", soilHumidity);
-  measureCounter = 0;
-  pumpCounter = 0;
-  sensorValue = 0;
-  state = STATE_START;
 }
 
 void loop() {
@@ -65,8 +64,20 @@ void loop() {
     case STATE_PUMPING:
       if(pumpCounter >= 3) {
         end_pumping();
-        start_sending();
+        start_checking();
       } else pumping_iter();
+      break;
+
+    case STATE_CHECK_RESULT:
+      if(measureCounter < 3)
+        measure_soil_iter();
+      else {
+        int previous_soilHumidity = soilHumidity;
+        end_measuring();
+        if(soilHumidity <= previous_soilHumidity)
+          outofwater = 1;
+        start_sending();
+      }
       break;
 
     case STATE_SENDING:
@@ -85,12 +96,11 @@ void loop() {
 }
 
 String soil_data() {
-  return String::format("{\"soilhumidity\": %d, \"soc\":%f,\"wifi\":%d,\"pumped\": %d}",soilHumidity,soc,wifi);
+  return String::format("{\"soilhumidity\": %d, \"soc\":%f,\"wifi\":%d,\"pumped\": %d,\"outofwater\": %d}",soilHumidity,soc,wifi,pumpCounter,outofwater);
 }
 
 void start_soil_measuring() {
   state = STATE_MEASURING;
-  digitalWrite(SOILPOWER, HIGH);
   delay(3000);
 }
 
@@ -107,7 +117,8 @@ void end_measuring() {
 
 void start_pumping() {
   state = STATE_PUMPING;
-  digitalWrite(PUMP,HIGH);
+  // TEMPORARILY DISABLE PUMP
+  //digitalWrite(PUMP,HIGH);
 }
 
 void pumping_iter() {
@@ -117,6 +128,12 @@ void pumping_iter() {
 
 void end_pumping() {
   digitalWrite(PUMP,LOW);
+}
+
+void start_checking() {
+  state = STATE_CHECK_RESULT;
+  sensorValue = 0;
+  measureCounter = 0;
 }
 
 void start_sending() {

@@ -1,1 +1,5 @@
-{}
+{
+    "particle.targetDevice": "SoilBuddy",
+    "particle.firmwareVersion": "1.2.0-beta.1",
+    "particle.targetPlatform": "photon"
+}
